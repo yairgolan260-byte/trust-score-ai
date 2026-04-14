@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trust Score | ניתוח מודעה חכם</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background:
+        radial-gradient(circle at top right, #dbeafe 0%, transparent 30%),
+        radial-gradient(circle at top left, #ede9fe 0%, transparent 25%),
+        linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+      color: #111827;
+    }
+    .container { max-width: 1100px; margin: 0 auto; padding: 24px; }
+    .hero { text-align: center; padding: 48px 16px 24px; }
+    .badge {
+      display: inline-block; background: rgba(17, 24, 39, 0.06); color: #111827;
+      border: 1px solid rgba(17, 24, 39, 0.08); padding: 8px 14px; border-radius: 999px;
+      font-size: 14px; margin-bottom: 18px;
+    }
+    .hero h1 { margin: 0; font-size: 46px; line-height: 1.15; }
+    .hero p { max-width: 760px; margin: 16px auto 0; font-size: 18px; line-height: 1.8; color: #4b5563; }
+    .main-card, .result-card, .info-card {
+      background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.7); box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+      border-radius: 28px;
+    }
+    .main-card { padding: 28px; margin-top: 22px; }
+    .upload-title { margin: 0 0 8px; font-size: 28px; }
+    .upload-subtitle { margin: 0 0 22px; color: #6b7280; line-height: 1.7; }
+    .field { margin-bottom: 18px; }
+    label { display: block; font-weight: 700; margin-bottom: 10px; font-size: 15px; }
+    input[type="text"], input[type="file"] {
+      width: 100%; padding: 14px 16px; border-radius: 16px; border: 1px solid #d1d5db;
+      background: white; font-size: 16px;
+    }
+    .upload-box { border: 2px dashed #cbd5e1; border-radius: 22px; padding: 22px; background: #f8fafc; }
+    .preview { display: none; margin-top: 18px; text-align: center; }
+    .preview img {
+      max-width: 100%; max-height: 360px; border-radius: 20px; border: 1px solid #e5e7eb;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+    }
+    .actions { display: flex; justify-content: center; margin-top: 24px; }
+    button {
+      border: none; background: linear-gradient(135deg, #111827, #1f2937); color: white;
+      padding: 16px 34px; border-radius: 18px; font-size: 18px; font-weight: 700; cursor: pointer;
+      box-shadow: 0 12px 30px rgba(17, 24, 39, 0.22); transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+    button:hover { transform: translateY(-1px); }
+    button:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+    .result-card { display: none; margin-top: 28px; padding: 28px; }
+    .top-result { display: grid; grid-template-columns: 260px 1fr; gap: 28px; align-items: center; }
+    .score-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .score-circle {
+      width: 190px; height: 190px; border-radius: 50%; background: conic-gradient(#10b981 0deg, #10b981 270deg, #e5e7eb 270deg);
+      display: flex; align-items: center; justify-content: center; position: relative; box-shadow: inset 0 0 0 10px rgba(255,255,255,0.4);
+    }
+    .score-circle::before {
+      content: ""; position: absolute; width: 145px; height: 145px; background: white; border-radius: 50%; box-shadow: inset 0 0 0 1px #e5e7eb;
+    }
+    .score-number { position: relative; z-index: 2; text-align: center; font-size: 40px; font-weight: 800; color: #111827; line-height: 1; }
+    .score-number span { display: block; font-size: 14px; font-weight: 600; color: #6b7280; margin-top: 8px; }
+    .risk-pill { margin-top: 18px; padding: 10px 18px; border-radius: 999px; font-weight: 800; font-size: 16px; display: inline-block; }
+    .risk-low { background: #dcfce7; color: #166534; }
+    .risk-medium { background: #fef3c7; color: #92400e; }
+    .risk-high { background: #fee2e2; color: #991b1b; }
+    .summary-box { background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); border: 1px solid #e5e7eb; border-radius: 22px; padding: 22px; }
+    .summary-box h2 { margin-top: 0; margin-bottom: 14px; font-size: 28px; }
+    .meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 18px; }
+    .meta-item { background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 18px; padding: 14px; }
+    .meta-label { font-size: 13px; color: #6b7280; margin-bottom: 8px; }
+    .meta-value { font-size: 18px; font-weight: 700; color: #111827; }
+    .cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 22px; }
+    .info-card { padding: 22px; }
+    .info-card h3 { margin-top: 0; margin-bottom: 14px; font-size: 22px; }
+    ul { margin: 0; padding-right: 20px; line-height: 2; color: #374151; }
+    .empty { color: #6b7280; }
+    .similar-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 16px; }
+    .similar-card { background: rgba(255,255,255,0.95); border: 1px solid #e5e7eb; border-radius: 22px; overflow: hidden; box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08); }
+    .similar-card img { width: 100%; height: 180px; object-fit: cover; display: block; }
+    .similar-card-body { padding: 16px; }
+    .similar-title { font-size: 18px; font-weight: 800; margin-bottom: 10px; }
+    .similar-price { font-size: 22px; font-weight: 800; margin-bottom: 10px; }
+    .similar-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .similar-tag { background: #f3f4f6; color: #111827; font-size: 13px; padding: 7px 10px; border-radius: 999px; }
+    .similar-reason { color: #4b5563; line-height: 1.7; font-size: 14px; }
+    .market-cheap { color: #166534; }
+    .market-fair { color: #92400e; }
+    .market-expensive { color: #991b1b; }
+    .footer-note { text-align: center; color: #6b7280; margin: 26px 0 10px; font-size: 14px; }
+    @media (max-width: 860px) {
+      .hero h1 { font-size: 34px; }
+      .top-result, .cards-grid, .meta-grid, .similar-grid { grid-template-columns: 1fr; }
+      .score-circle { width: 170px; height: 170px; }
+      .score-circle::before { width: 128px; height: 128px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <section class="hero">
+      <div class="badge">בדיקת אמינות חכמה למודעות</div>
+      <h1>בודקים מודעה מתצלום מסך<br>ומקבלים תמונת מצב מלאה</h1>
+      <p>
+        העלה צילום מסך של מודעה, והמערכת תנסה לזהות את סוג המוצר או הרכב,
+        להעריך מצב חזותי, להציג נורות אזהרה, לתת סיכום AI, ולהציע חלופות דומות מהשוק.
+      </p>
+    </section>
+
+    <section class="main-card">
+      <h2 class="upload-title">העלה צילום מסך לניתוח</h2>
+      <p class="upload-subtitle">מתאים במיוחד לרכבים, טלפונים, מוצרים יד שנייה ופריטים יקרים יחסית.</p>
+
+      <div class="field">
+        <label for="title">כותרת אופציונלית</label>
+        <input id="title" type="text" placeholder="למשל: טויוטה קורולה 2022 / אייפון 14 פרו" />
+      </div>
+
+      <div class="field">
+        <label for="screenshot">צילום מסך של המודעה</label>
+        <div class="upload-box">
+          <input id="screenshot" type="file" accept="image/png,image/jpeg,image/webp" />
+          <div class="preview" id="previewBox">
+            <img id="previewImage" alt="תצוגה מקדימה" />
+          </div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="analyzeBtn">נתח מודעה</button>
+      </div>
+    </section>
+
+    <section class="result-card" id="resultCard">
+      <div class="top-result">
+        <div class="score-wrap">
+          <div class="score-circle" id="scoreCircle">
+            <div class="score-number" id="scoreNumber">--/10<span>ציון אמינות</span></div>
+          </div>
+          <div class="risk-pill" id="riskPill">ממתין לניתוח</div>
+        </div>
+
+        <div class="summary-box">
+          <h2>סיכום AI</h2>
+          <p id="summaryText">כאן יופיע הסיכום החכם של המערכת.</p>
+          <div class="meta-grid">
+            <div class="meta-item"><div class="meta-label">סוג פריט</div><div class="meta-value" id="itemType">--</div></div>
+            <div class="meta-item"><div class="meta-label">דגם משוער</div><div class="meta-value" id="estimatedModel">--</div></div>
+            <div class="meta-item"><div class="meta-label">מצב חזותי</div><div class="meta-value" id="visualCondition">--</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cards-grid">
+        <div class="info-card"><h3>נורות אזהרה</h3><ul id="warningsList"></ul></div>
+        <div class="info-card"><h3>נקודות חיוביות</h3><ul id="positivesList"></ul></div>
+        <div class="info-card"><h3>שאלות שכדאי לשאול</h3><ul id="questionsList"></ul></div>
+        <div class="info-card"><h3>סטטוס ניתוח</h3><ul id="statusList"><li class="empty">עדיין לא בוצע ניתוח.</li></ul></div>
+      </div>
+    </section>
+
+    <section class="result-card" id="marketSection" style="display:none; margin-top:22px;">
+      <div class="summary-box">
+        <h2>השוואת שוק</h2>
+        <div class="meta-grid">
+          <div class="meta-item"><div class="meta-label">מותג</div><div class="meta-value" id="marketBrand">--</div></div>
+          <div class="meta-item"><div class="meta-label">טווח מחיר משוער</div><div class="meta-value" id="marketRange">--</div></div>
+          <div class="meta-item"><div class="meta-label">סטטוס מחיר</div><div class="meta-value" id="marketPosition">--</div></div>
+        </div>
+      </div>
+
+      <div style="margin-top:22px;">
+        <h2 style="margin-bottom:14px;">חלופות דומות שמצאנו</h2>
+        <div id="similarResultsGrid" class="similar-grid"></div>
+      </div>
+    </section>
+
+    <div class="footer-note">הניתוח הוא אינדיקציה בלבד ואינו מהווה קביעה חד-משמעית.</div>
+  </div>
+
+  <script>
+    const screenshotInput = document.getElementById("screenshot");
+    const previewBox = document.getElementById("previewBox");
+    const previewImage = document.getElementById("previewImage");
+    const analyzeBtn = document.getElementById("analyzeBtn");
+    const resultCard = document.getElementById("resultCard");
+    const scoreNumber = document.getElementById("scoreNumber");
+    const scoreCircle = document.getElementById("scoreCircle");
+    const riskPill = document.getElementById("riskPill");
+    const summaryText = document.getElementById("summaryText");
+    const itemType = document.getElementById("itemType");
+    const estimatedModel = document.getElementById("estimatedModel");
+    const visualCondition = document.getElementById("visualCondition");
+    const warningsList = document.getElementById("warningsList");
+    const positivesList = document.getElementById("positivesList");
+    const questionsList = document.getElementById("questionsList");
+    const statusList = document.getElementById("statusList");
+    const marketSection = document.getElementById("marketSection");
+    const marketBrand = document.getElementById("marketBrand");
+    const marketRange = document.getElementById("marketRange");
+    const marketPosition = document.getElementById("marketPosition");
+    const similarResultsGrid = document.getElementById("similarResultsGrid");
+
+    screenshotInput.addEventListener("change", () => {
+      const file = screenshotInput.files[0];
+      if (!file) { previewBox.style.display = "none"; return; }
+      const reader = new FileReader();
+      reader.onload = e => { previewImage.src = e.target.result; previewBox.style.display = "block"; };
+      reader.readAsDataURL(file);
+    });
+
+    function renderList(element, items, fallbackText) {
+      if (!items || !items.length) { element.innerHTML = `<li class="empty">${fallbackText}</li>`; return; }
+      element.innerHTML = items.map(item => `<li>${item}</li>`).join("");
+    }
+
+    function setRisk(risk) {
+      riskPill.className = "risk-pill";
+      const clean = (risk || "").trim();
+      if (clean.includes("נמוכה")) riskPill.classList.add("risk-low");
+      else if (clean.includes("בינונית")) riskPill.classList.add("risk-medium");
+      else riskPill.classList.add("risk-high");
+      riskPill.textContent = clean || "לא זוהה";
+    }
+
+    function setScore(score) {
+      const numeric = Number(score || 0);
+      const clamped = Math.max(0, Math.min(10, numeric));
+      const deg = (clamped / 10) * 360;
+      let color = "#ef4444";
+      if (clamped >= 7.5) color = "#10b981";
+      else if (clamped >= 5) color = "#f59e0b";
+      scoreCircle.style.background = `conic-gradient(${color} 0deg, ${color} ${deg}deg, #e5e7eb ${deg}deg)`;
+      scoreNumber.innerHTML = `${clamped}/10<span>ציון אמינות</span>`;
+    }
+
+    function formatPrice(price) {
+      if (price === null || price === undefined || Number.isNaN(Number(price))) return "--";
+      return Number(price).toLocaleString("he-IL") + " ₪";
+    }
+
+    function setMarketPosition(position) {
+      marketPosition.textContent = position || "לא זוהה";
+      marketPosition.className = "meta-value";
+      if ((position || "").includes("זול")) marketPosition.classList.add("market-cheap");
+      else if ((position || "").includes("הוגן")) marketPosition.classList.add("market-fair");
+      else marketPosition.classList.add("market-expensive");
+    }
+
+    function scoreAlternative(item, analysis) {
+      let score = 0;
+      if (item.category && analysis.category && item.category === analysis.category) score += 25;
+      if (item.brand && analysis.brand && item.brand.toLowerCase() === analysis.brand.toLowerCase()) score += 30;
+      const modelA = (item.model || "").toLowerCase();
+      const modelB = (analysis.estimated_model || "").toLowerCase();
+      if (modelA && modelB && (modelA.includes(modelB) || modelB.includes(modelA))) score += 25;
+      if (item.year && analysis.year) {
+        const diff = Math.abs(item.year - analysis.year);
+        if (diff === 0) score += 20;
+        else if (diff === 1) score += 12;
+        else if (diff === 2) score += 6;
+      }
+      return Math.min(100, score);
+    }
+
+    async function loadSimilarResults(analysis) {
+      try {
+        const res = await fetch("/similar-results.json");
+        const allResults = await res.json();
+        const filtered = allResults
+          .map(item => ({ ...item, calculated_match: scoreAlternative(item, analysis) }))
+          .filter(item => item.calculated_match >= 50)
+          .sort((a, b) => b.calculated_match - a.calculated_match)
+          .slice(0, 6);
+
+        marketBrand.textContent = analysis.brand || "לא זוהה";
+        const min = analysis.estimated_price_range?.min || 0;
+        const max = analysis.estimated_price_range?.max || 0;
+        marketRange.textContent = min && max ? `${formatPrice(min)} - ${formatPrice(max)}` : "לא זוהה";
+        setMarketPosition(analysis.price_position || "לא זוהה");
+
+        if (!filtered.length) {
+          similarResultsGrid.innerHTML = `<div class="empty">לא נמצאו כרגע חלופות דומות מספיק.</div>`;
+          marketSection.style.display = "block";
+          return;
+        }
+
+        similarResultsGrid.innerHTML = filtered.map(item => `
+          <div class="similar-card">
+            <img src="${item.image}" alt="${item.title}">
+            <div class="similar-card-body">
+              <div class="similar-title">${item.title}</div>
+              <div class="similar-price">${formatPrice(item.price)}</div>
+              <div class="similar-tags">
+                <span class="similar-tag">התאמה ${item.calculated_match}%</span>
+                <span class="similar-tag">אמינות ${item.trust_score}/10</span>
+                <span class="similar-tag">${item.year || "שנה לא ידועה"}</span>
+              </div>
+              <div class="similar-reason">${item.reason}</div>
+            </div>
+          </div>`).join("");
+
+        marketSection.style.display = "block";
+      } catch {
+        marketSection.style.display = "none";
+      }
+    }
+
+    analyzeBtn.addEventListener("click", async () => {
+      const file = screenshotInput.files[0];
+      const title = document.getElementById("title").value.trim();
+      if (!file) { alert("צריך להעלות צילום מסך"); return; }
+
+      const formData = new FormData();
+      formData.append("title", title);
+      formData.append("screenshot", file);
+
+      analyzeBtn.disabled = true;
+      analyzeBtn.textContent = "מנתח...";
+      resultCard.style.display = "block";
+      marketSection.style.display = "none";
+      similarResultsGrid.innerHTML = "";
+      marketBrand.textContent = "--";
+      marketRange.textContent = "--";
+      marketPosition.textContent = "--";
+      setScore(0);
+      setRisk("ממתין לניתוח");
+      summaryText.textContent = "אנחנו מעבדים עכשיו את צילום המסך ושולחים אותו לניתוח AI...";
+      itemType.textContent = "--";
+      estimatedModel.textContent = "--";
+      visualCondition.textContent = "--";
+      renderList(warningsList, [], "עדיין אין נתונים.");
+      renderList(positivesList, [], "עדיין אין נתונים.");
+      renderList(questionsList, [], "עדיין אין נתונים.");
+      statusList.innerHTML = "<li>הקובץ נשלח לשרת.</li><li>המערכת מנתחת את התמונה.</li>";
+
+      try {
+        const res = await fetch("/analyze-screenshot", { method: "POST", body: formData });
+        const data = await res.json();
+        if (!res.ok) {
+          setRisk("שגיאה");
+          summaryText.textContent = data.error || "אירעה שגיאה בניתוח.";
+          statusList.innerHTML = "<li>השרת החזיר שגיאה.</li>";
+          return;
+        }
+        setScore(data.score ?? 0);
+        setRisk(data.risk_level || "לא זוהה");
+        summaryText.textContent = data.summary || "לא התקבל סיכום.";
+        itemType.textContent = data.item_type || "לא זוהה";
+        estimatedModel.textContent = data.estimated_model || "לא זוהה";
+        visualCondition.textContent = data.visual_condition || "לא זוהה";
+        renderList(warningsList, data.warnings, "לא זוהו נורות אזהרה חריגות.");
+        renderList(positivesList, data.positives, "לא זוהו כרגע נקודות חיזוק.");
+        renderList(questionsList, data.questions_to_ask, "אין כרגע שאלות מומלצות.");
+        statusList.innerHTML = "<li>הניתוח הושלם בהצלחה.</li><li>התקבל ציון אמינות ורמת סיכון.</li><li>נבנה סיכום AI ונוצרו המלצות להמשך.</li>";
+        await loadSimilarResults(data);
+      } catch {
+        setRisk("שגיאה");
+        summaryText.textContent = "אירעה שגיאה בעת שליחת הבקשה לשרת.";
+        statusList.innerHTML = "<li>החיבור לשרת נכשל או שהשרת החזיר תקלה.</li>";
+      } finally {
+        analyzeBtn.disabled = false;
+        analyzeBtn.textContent = "נתח מודעה";
+        resultCard.scrollIntoView({ behavior: "smooth" });
+      }
+    });
+  </script>
+</body>
+</html>

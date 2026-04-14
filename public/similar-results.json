@@ -1,0 +1,46 @@
+[
+  {
+    "category": "car",
+    "brand": "Toyota",
+    "model": "Corolla",
+    "year": 2022,
+    "title": "טויוטה קורולה 2022",
+    "price": 96000,
+    "trust_score": 8.4,
+    "reason": "אותו דגם, שנה דומה, מחיר נמוך יותר",
+    "image": "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=900&auto=format&fit=crop"
+  },
+  {
+    "category": "car",
+    "brand": "Toyota",
+    "model": "Corolla",
+    "year": 2021,
+    "title": "טויוטה קורולה 2021",
+    "price": 92000,
+    "trust_score": 7.9,
+    "reason": "דגם דומה מאוד, שנה קרובה, זול יותר",
+    "image": "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=900&auto=format&fit=crop"
+  },
+  {
+    "category": "car",
+    "brand": "Mazda",
+    "model": "3",
+    "year": 2022,
+    "title": "מאזדה 3 2022",
+    "price": 94500,
+    "trust_score": 8.1,
+    "reason": "קטגוריה דומה, שנה דומה, חלופה משתלמת",
+    "image": "https://images.unsplash.com/photo-1550355291-bbee04a92027?w=900&auto=format&fit=crop"
+  },
+  {
+    "category": "phone",
+    "brand": "Apple",
+    "model": "iPhone 14 Pro",
+    "year": 2023,
+    "title": "אייפון 14 פרו 256GB",
+    "price": 3200,
+    "trust_score": 8.8,
+    "reason": "אותו דגם כמעט מלא, מחיר תחרותי",
+    "image": "https://images.unsplash.com/photo-1678652197831-2d180705cd2c?w=900&auto=format&fit=crop"
+  }
+]
