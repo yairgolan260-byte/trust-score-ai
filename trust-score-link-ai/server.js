@@ -3,7 +3,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import axios from "axios";
-import cheerio from "cheerio";
+import * as cheerio from "cheerio";
 import path from "path";
 import { fileURLToPath } from "url";
 import OpenAI from "openai";
